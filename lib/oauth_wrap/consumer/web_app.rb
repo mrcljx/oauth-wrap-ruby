@@ -30,7 +30,7 @@ class OauthWrap::WebApp
     self
   end
 
-  def continue(params, target = {})
+  def continue(params, target = OpenStruct.new)
     verification_code = resolve_params(params)
     response = self.class.post(config.authorization_url,
         :wrap_verification_code => config.verification_code,
@@ -46,11 +46,11 @@ class OauthWrap::WebApp
     [:refresh_token, :access_token].each do |fragment|
       value = result.delete(:"wrap_#{fragment}")
       raise OauthWrap::MissingParameters, "response didn't contain the '#{fragment}'" unless value
-      target[fragment] = value
+      target.send("#{fragment}=", value)
     end
     
     # optional
-    target[:access_token_expires_in] = result.delete(:wrap_access_token_expires_in)
+    target.send :access_token_expires_in=, result.delete(:wrap_access_token_expires_in)
 
     tokens = target
     target
