@@ -3,9 +3,11 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'oauth_wrap'
 require 'spec'
 require 'spec/autorun'
-require 'webmock'
 
-WebMock.disable_net_connect!
+require 'webmock/rspec'
+include WebMock
+
+disable_net_connect!
 
 # fix HTTParty requests
 module HTTParty

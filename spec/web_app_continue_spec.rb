@@ -19,6 +19,12 @@ module OauthWrap
     
     it "issues a POST request" do
       WebMock.stub_request(:post, AUTH_URL).to_return(:body => "wrap_refresh_token=refresh_me&wrap_access_token=ACCESS_OK")
+      @web_app.continue @params
+      WebMock.should have_requested(:post, AUTH_URL).once
+    end
+    
+    it "parses OK responses" do
+      WebMock.stub_request(:post, AUTH_URL).to_return(:body => "wrap_refresh_token=refresh_me&wrap_access_token=ACCESS_OK")
       target = OpenStruct.new
       result = @web_app.continue @params, target
       
