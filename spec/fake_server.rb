@@ -5,11 +5,13 @@ module OauthWrap
     end
     
     def start
-      auth_proc = handler_for(:auth_handler)
-      refresh_proc = handler_for(:refresh_handler)
-      
-      { Fixtures::AUTH_URL => auth_proc, Fixtures::REFRESH_URL => refresh_proc }.each do |url,handler|
-        WebMock.stub_request(:post, url).to_return(
+      {
+        [:post, Fixtures::AUTH_URL] => handler_for(:auth_handler),
+        [:post, Fixtures::REFRESH_URL] => handler_for(:refresh_handler),
+        [:get, Fixtures::SIMPLE_RESOURCE_URL] => handler_for(:simple_resource_handler),
+      }.each do |request,handler|
+        method, url = *request
+        WebMock.stub_request(method, url).to_return(
           :body => handler.call(:body, ""),
           :headers => handler.call(:headers, {}),
           :status => (handler.call(:status, ["200", "OK"]))
@@ -56,6 +58,33 @@ module OauthWrap
       else
         UNAUTHORIZED_RESPONSE
       end
+    end
+    
+    def access_token_response(request)
+      
+      # access token
+      request.headers["Authorization"] =~ /\AWRAP access_token="(.*)"\Z/
+      access_token = $1
+      return UNAUTHORIZED_RESPONSE unless access_token
+      
+      # find account
+      account = Fixtures::ACCOUNTS.select do |account|
+        account[:access_token] == access_token
+      end.first
+      
+      return UNAUTHORIZED_RESPONSE unless account
+      
+      # TODO: check expiry
+      false
+    end
+    
+    def simple_resource_handler(request)
+      response = access_token_response(request)
+      return response if response
+      
+      {
+        :body => Fixtures::SIMPLE_RESOURCE
+      }
     end
     
     def refresh_handler(request)

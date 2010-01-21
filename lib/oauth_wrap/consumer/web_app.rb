@@ -176,7 +176,7 @@ class OauthWrap::WebApp
     raise OauthWrap::NotReady unless ready?
     self.class.headers "Authorization" => "WRAP access_token=\"#{tokens.access_token}\""
     response = self.class.send(method, *args)
-    check_reponse(response)
+    check_response(response)
   end
 
   %w{get post put delete}.each do |m|
