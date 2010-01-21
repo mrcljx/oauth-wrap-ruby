@@ -74,8 +74,11 @@ module OauthWrap
       
       return UNAUTHORIZED_RESPONSE unless account
       
-      # TODO: check expiry
-      false
+      if account[:token_issued_at] + account[:token_expires_in] < Time.now
+        UNAUTHORIZED_RESPONSE
+      else
+        false
+      end
     end
     
     def simple_resource_handler(request)
@@ -98,6 +101,8 @@ module OauthWrap
       
       if account
         account[:access_token] = Fixtures::REFRESHED_ACCESS_TOKEN
+        account[:token_expires_in] = 3600
+        account[:token_issued_at] = Time.now 
         
         {
           :body => "wrap_access_token=#{account[:access_token]}&wrap_access_token_expires_in=#{account[:token_expires_in]}"

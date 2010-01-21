@@ -121,8 +121,12 @@ class OauthWrap::WebApp
     raise OauthWrap::InvalidCredentials
   end
   
+  def supports_refresh?
+    !config.refresh_url.nil?
+  end
+  
   def refresh(target = nil)
-    raise OauthWrap::RefreshNotSupported unless config.refresh_url
+    raise OauthWrap::RefreshNotSupported unless supports_refresh?
     raise "can't refresh without a refresh_token" unless tokens and tokens.refresh_token
     
     target ||= OpenStruct.new
@@ -138,6 +142,11 @@ class OauthWrap::WebApp
     check_refresh_response(response)
     result = response.parsed_body
     
+    tokens.access_token = response.parsed_body[:wrap_access_token]
+    tokens.token_expires_in = response.parsed_body[:wrap_access_token_expires_in]
+    tokens.token_issued_at = Time.now
+    
+    # TODO: merge with target
     target
   end
   
@@ -172,11 +181,19 @@ class OauthWrap::WebApp
     tokens and tokens.access_token and tokens.refresh_token
   end
 
-  def request(method, *args)
-    raise OauthWrap::NotReady unless ready?
+  def request_without_retry(method, *args)
     self.class.headers "Authorization" => "WRAP access_token=\"#{tokens.access_token}\""
     response = self.class.send(method, *args)
     check_response(response)
+  end
+
+  def request(method, *args)
+    raise OauthWrap::NotReady unless ready?
+    request_without_retry(method, *args)
+  rescue OauthWrap::Unauthorized
+    raise unless supports_refresh?
+    refresh
+    request_without_retry(method, *args)
   end
 
   %w{get post put delete}.each do |m|
