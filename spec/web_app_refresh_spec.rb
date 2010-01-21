@@ -28,9 +28,5 @@ module OauthWrap
         @no_refresh.refresh
       }.should raise_error(OauthWrap::RefreshNotSupported)
     end
-    
-    it "is called by regular requests if an access_token expired" do
-      @web_app.get(Fixtures::SIMPLE_RESOURCE_URL)
-    end
   end
 end
