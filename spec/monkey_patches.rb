@@ -1,4 +1,4 @@
-# fix HTTParty requests
+# fix HTTParty requests not to include an unnecessary "?"
 module HTTParty
   class Request
     def query_string(uri)
@@ -8,7 +8,11 @@ module HTTParty
       if options[:query].is_a?(Hash)
         query_string_parts << options[:default_params].merge(options[:query]).to_params
       else
+        
+        # OLD: unless options[:default_params].nil?
         query_string_parts << options[:default_params].to_params if options[:default_params] and !options[:default_params].empty?
+        
+        # OLD: unless options[:query].nil?
         query_string_parts << options[:query] if options[:query] and !options[:query].empty?
       end
 
@@ -17,6 +21,7 @@ module HTTParty
   end
 end
 
+# WebMock doesn'T accept Procs for :status
 module WebMock
   class RequestRegistry
     def evaluate_response_for_request(response, request_signature)
