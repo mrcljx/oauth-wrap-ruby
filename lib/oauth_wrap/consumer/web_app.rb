@@ -4,6 +4,7 @@ require 'ostruct'
 module OauthWrap
   class OauthWrapError < StandardError; end
   class MissingParameters < OauthWrapError; end
+  class RefreshNotSupported < OauthWrapError; end
   class Unauthorized < OauthWrapError; end
   class InvalidCredentials < Unauthorized; end
   class RequestFailed < OauthWrapError
@@ -18,6 +19,7 @@ class OauthWrap::WebApp
 
   def initialize(config = {})
     @config = OpenStruct.new
+    @tokens = OpenStruct.new
     config.each do |k,v|
       @config.send("#{k}=", v)
     end
@@ -28,6 +30,18 @@ class OauthWrap::WebApp
   def as(client_id, client_secret)
     config.client_secret = client_secret
     config.client_id = client_id
+    self
+  end
+  
+  def with_tokens(tokens = {})
+    %w{access_token refresh_token}.each do |part|
+      if tokens.is_a? Hash
+        self.tokens.send("#{part}=", tokens[part.to_sym])
+      elsif tokens.respond_to? part
+        self.tokens.send("#{part}=", tokens.send(part))
+      end
+    end
+    
     self
   end
 
@@ -106,7 +120,39 @@ class OauthWrap::WebApp
   rescue OauthWrap::Unauthorized
     raise OauthWrap::InvalidCredentials
   end
+  
+  def refresh(target = nil)
+    raise OauthWrap::RefreshNotSupported unless config.refresh_url
+    raise "can't refresh without a refresh_token" unless tokens and tokens.refresh_token
+    
+    target ||= OpenStruct.new
+    
+    response = self.class.post(config.refresh_url, :body => {
+        :wrap_client_id => config.client_id,
+        :wrap_client_secret => config.client_secret,
+        :wrap_refresh_token => tokens.refresh_token
+      }
+    )
+    
+    parse_body(response)
+    check_refresh_response(response)
+    result = response.parsed_body
+    
+    target
+  end
+  
+  def check_refresh_response(response)
+    check_response(response)
+    
+    case response.code.to_i
+    when 200
+      return
+    else
+      raise OauthWrap::RequestFailed.new(response)
+    end
+  end
 
+  # checks for http 401 Unauthorized and "WWW-Authenticate: WRAP"
   def check_response(response)
     case response.code.to_i
     when 401
@@ -116,8 +162,11 @@ class OauthWrap::WebApp
   end
 
   def tokens=(new_tokens)
+    # TODO: process non-hashes/openstructs
     @tokens = new_tokens
   end
+  
+  attr_reader :tokens
 
   def ready?
     tokens and tokens.access_token and tokens.refresh_token
