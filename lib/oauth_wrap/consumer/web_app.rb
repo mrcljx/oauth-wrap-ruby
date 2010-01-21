@@ -10,6 +10,7 @@ module OauthWrap
     def initialize(response); @response = response; end
     attr_reader :response
   end
+  class BadRequest < RequestFailed; end
 end
 
 class OauthWrap::WebApp
@@ -30,17 +31,21 @@ class OauthWrap::WebApp
     self
   end
 
-  def continue(params, target = OpenStruct.new)
+  def continue(params, target = nil)
+    target ||= OpenStruct.new
+    
     verification_code = resolve_params(params)
-    response = self.class.post(config.authorization_url,
-        :wrap_verification_code => config.verification_code,
+    response = self.class.post(config.authorization_url, :body => {
+        :wrap_verification_code => verification_code,
         :wrap_client_id => config.client_id,
         :wrap_client_secret => config.client_secret,
         :wrap_callback => config.callback
+      }
     )
 
+    parse_body(response)
     check_verification_response(response)
-    result = parse_body(response)
+    result = response.parsed_body
 
     # required
     [:refresh_token, :access_token].each do |fragment|
@@ -64,7 +69,11 @@ class OauthWrap::WebApp
       result[k.to_sym] = v
     end
     
-    result
+    # extend request result
+    def response.parsed_body; @parsed_body; end
+    def response.parsed_body=(v); @parsed_body = v; end
+    
+    response.parsed_body = result
   end
   
   def resolve_params(params)
@@ -78,17 +87,17 @@ class OauthWrap::WebApp
   def check_verification_response(response)
     check_response(response)
 
-    case response.code
+    case response.code.to_i
     when 200
       return
     when 400
-      case response.body[:wrap_error_reason]
+      case response.parsed_body[:wrap_error_reason]
       when "expired_verification_code"
         raise OauthWrap::ExpiredVerificationCode
       when "invalid_callback"
         raise OauthWrap::InvalidCallback
       else
-        raise OauthWrap::RequestFailed.new(response)
+        raise OauthWrap::BadRequest.new(response)
       end
     else
       raise OauthWrap::RequestFailed.new(response)
@@ -99,7 +108,7 @@ class OauthWrap::WebApp
   end
 
   def check_response(response)
-    case response.code
+    case response.code.to_i
     when 401
       auth_header = response.headers["www-authenticate"]
       raise OauthWrap::Unauthorized if auth_header and auth_header.include? "WRAP"
