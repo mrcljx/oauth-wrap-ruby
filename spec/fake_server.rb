@@ -3,7 +3,26 @@ module OauthWrap
     def initilaize
   
     end
-
+    
+    def start
+      picker = lambda do |*args|
+        on, default = *args
+        lambda do |request|
+          self.call(request)[on] || begin
+            default
+          end
+        end
+      end
+      
+      WebMock.stub_request(:post, Fixtures::AUTH_URL).to_return(
+        :body => picker.call(:body, ""),
+        :headers => picker.call(:headers, {}),
+        :status => (picker.call(:status, ["200", "OK"]))
+      )
+    end
+    
+    protected
+    
     def get_param(params, param)
       params.assoc(param) ? params.assoc(param)[1] : nil
     end

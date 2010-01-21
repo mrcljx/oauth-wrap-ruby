@@ -5,28 +5,9 @@ module OauthWrap
   describe WebApp, '#continue' do
     before :each do
       WebMock.reset_webmock
-      emulate_auth_server
+      FakeOauthServer.new.start
       @web_app = OauthWrap.as_web_app(:authorization_url => Fixtures::AUTH_URL).as(*Fixtures::VALID_CREDENTIALS.first)
       @illegal_web_app = OauthWrap.as_web_app(:authorization_url => Fixtures::AUTH_URL).as("hacker", "i-am-1337")
-    end
-    
-    def emulate_auth_server
-      server = FakeOauthServer.new
-      
-      picker = lambda do |*args|
-        on, default = *args
-        lambda do |request|
-          server.call(request)[on] || begin
-            default
-          end
-        end
-      end
-      
-      WebMock.stub_request(:post, Fixtures::AUTH_URL).to_return(
-        :body => picker.call(:body, ""),
-        :headers => picker.call(:headers, {}),
-        :status => (picker.call(:status, ["200", "OK"]))
-      )
     end
     
     def do_continue(verification_token, target = nil)
