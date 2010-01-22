@@ -5,12 +5,14 @@
 
 Gem::Specification.new do |s|
   s.name = %q{oauth-wrap}
-  s.version = "0.0.0"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Marcel Jackwerth"]
-  s.date = %q{2010-01-21}
-  s.description = %q{TODO: longer description of your gem}
+  s.date = %q{2010-01-22}
+  s.description = %q{Web Resource Authorization Protocol (WRAP) is a profile of OAuth, also called OAuth WRAP.
+      While similar in pattern to OAuth 1.0A, the WRAP profile(s) have a number of important
+      capabilities that were not available previously in OAuth. For more info see http://wiki.oauth.net/OAuth-WRAP}
   s.email = %q{marcel@northdocks.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -26,6 +28,12 @@ Gem::Specification.new do |s|
      "lib/oauth_wrap.rb",
      "lib/oauth_wrap/consumer/exceptions.rb",
      "lib/oauth_wrap/consumer/web_app.rb",
+     "lib/oauth_wrap/consumer/web_app/authorization_requests.rb",
+     "lib/oauth_wrap/consumer/web_app/generic_requests.rb",
+     "lib/oauth_wrap/consumer/web_app/helpers.rb",
+     "lib/oauth_wrap/consumer/web_app/refresh_requests.rb",
+     "lib/oauth_wrap/consumer/web_app/setup.rb",
+     "oauth-wrap.gemspec",
      "spec/fake_server.rb",
      "spec/fixtures.rb",
      "spec/monkey_patches.rb",
@@ -39,7 +47,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
-  s.summary = %q{TODO: one-line summary of your gem}
+  s.summary = %q{Implementaton of OAuth WRAP (draft)}
   s.test_files = [
     "spec/fake_server.rb",
      "spec/fixtures.rb",

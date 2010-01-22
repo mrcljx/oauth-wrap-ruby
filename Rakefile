@@ -5,8 +5,10 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "oauth-wrap"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{Implementaton of OAuth WRAP (draft)}
+    gem.description = %Q{Web Resource Authorization Protocol (WRAP) is a profile of OAuth, also called OAuth WRAP.
+      While similar in pattern to OAuth 1.0A, the WRAP profile(s) have a number of important
+      capabilities that were not available previously in OAuth. For more info see http://wiki.oauth.net/OAuth-WRAP}
     gem.email = "marcel@northdocks.com"
     gem.homepage = "http://github.com/sirlantis/oauth-wrap-ruby"
     gem.authors = ["Marcel Jackwerth"]
