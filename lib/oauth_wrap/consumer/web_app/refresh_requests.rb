@@ -32,11 +32,15 @@ module OauthWrap::WebApp::RefreshRequests
   
   # throws exceptions for negative responses after a refresh request
   def check_refresh_response(response)
-    check_response(response)
-    
     case response.code.to_i
     when 200
       return
+    when OauthWrap::WebApp::UNAUTHORIZED_STATUS_CODE
+      if wrap_response?(response)
+        raise OauthWrap::Unauthorized
+      else
+        raise OauthWrap::RequestFailed.new(response)
+      end
     else
       raise OauthWrap::RequestFailed.new(response)
     end

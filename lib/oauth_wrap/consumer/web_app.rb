@@ -9,6 +9,8 @@ class OauthWrap::WebApp
     require file
   end
   
+  UNAUTHORIZED_STATUS_CODE = 401
+  
   attr_reader :config, :tokens
   
   def initialize(config = {})

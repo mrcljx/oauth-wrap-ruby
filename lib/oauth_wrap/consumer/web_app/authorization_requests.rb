@@ -41,8 +41,6 @@ module OauthWrap::WebApp::AuthorizationRequests
   end
 
   def check_verification_response(response)
-    check_response(response)
-
     case response.code.to_i
     when 200
       return
@@ -55,12 +53,15 @@ module OauthWrap::WebApp::AuthorizationRequests
       else
         raise OauthWrap::BadRequest.new(response)
       end
+    when OauthWrap::WebApp::UNAUTHORIZED_STATUS_CODE
+      if wrap_response?(response)
+        raise OauthWrap::InvalidCredentials
+      else
+        raise OauthWrap::RequestFailed.new(response)
+      end
     else
       raise OauthWrap::RequestFailed.new(response)
     end
-  
-  rescue OauthWrap::Unauthorized
-    raise OauthWrap::InvalidCredentials
   end
   
 end
