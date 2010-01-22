@@ -7,20 +7,18 @@ module OauthWrap::WebApp::Setup
   end
   
   def with_tokens(tokens = {})
-    %w{access_token refresh_token}.each do |part|
-      if tokens.is_a? Hash
-        self.tokens.send("#{part}=", tokens[part.to_sym])
-      elsif tokens.respond_to? part
-        self.tokens.send("#{part}=", tokens.send(part))
-      end
-    end
-    
+    self.tokens = tokens
     self
   end
   
   def tokens=(new_tokens)
-    # TODO: process non-hashes/openstructs
-    @tokens = new_tokens
+    %w{access_token refresh_token}.each do |part|
+      if new_tokens.is_a? Hash
+        self.tokens.send("#{part}=", new_tokens[part.to_sym])
+      elsif new_tokens.respond_to? part
+        self.tokens.send("#{part}=", new_tokens.send(part))
+      end
+    end
   end
   
 end
