@@ -1,19 +1,6 @@
 require 'httparty'
 require 'ostruct'
 
-module OauthWrap
-  class OauthWrapError < StandardError; end
-  class MissingParameters < OauthWrapError; end
-  class RefreshNotSupported < OauthWrapError; end
-  class Unauthorized < OauthWrapError; end
-  class InvalidCredentials < Unauthorized; end
-  class RequestFailed < OauthWrapError
-    def initialize(response); @response = response; end
-    attr_reader :response
-  end
-  class BadRequest < RequestFailed; end
-end
-
 class OauthWrap::WebApp
   include HTTParty
 
@@ -45,8 +32,8 @@ class OauthWrap::WebApp
     self
   end
 
+  # To be used when the user comes back to the site's callback URL.
   def continue(params, target = nil)
-    target ||= OpenStruct.new
     
     verification_code = resolve_params(params)
     response = self.class.post(config.authorization_url, :body => {
@@ -61,6 +48,8 @@ class OauthWrap::WebApp
     check_verification_response(response)
     result = response.parsed_body
 
+    target ||= OpenStruct.new
+    
     # required
     [:refresh_token, :access_token].each do |fragment|
       value = result.delete(:"wrap_#{fragment}")
@@ -142,6 +131,7 @@ class OauthWrap::WebApp
     check_refresh_response(response)
     result = response.parsed_body
     
+    # wrap response into object
     tokens.access_token = response.parsed_body[:wrap_access_token]
     tokens.token_expires_in = response.parsed_body[:wrap_access_token_expires_in]
     tokens.token_issued_at = Time.now
@@ -150,6 +140,7 @@ class OauthWrap::WebApp
     target
   end
   
+  # throws exceptions for negative responses after a refresh request
   def check_refresh_response(response)
     check_response(response)
     

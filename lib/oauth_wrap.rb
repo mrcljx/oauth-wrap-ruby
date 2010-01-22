@@ -7,6 +7,7 @@ end
 
 require 'rubygems'
 require 'httparty'
+require 'consumer/exceptions'
 require 'consumer/web_app'
 
 def OauthWrap.as_web_app(configuration)
