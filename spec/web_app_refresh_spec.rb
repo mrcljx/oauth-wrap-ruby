@@ -11,21 +11,6 @@ module OauthWrap
         as_web_app(:authorization_url => Fixtures::AUTH_URL, :refresh_url => Fixtures::REFRESH_URL).
         as(*Fixtures::VALID_CREDENTIALS.first).
         with_tokens(Fixtures::ACCOUNTS.first)
-        
-      @no_refresh = OauthWrap.
-        as_web_app(:authorization_url => Fixtures::AUTH_URL).
-        as(*Fixtures::VALID_CREDENTIALS.first).
-        with_tokens(Fixtures::ACCOUNTS.first)
-        
-      @expired = OauthWrap.
-          as_web_app(:authorization_url => Fixtures::AUTH_URL, :refresh_url => Fixtures::REFRESH_URL).
-          as(*Fixtures::VALID_CREDENTIALS.first).
-          with_tokens(Fixtures::EXPIRED_ACCOUNT)
-          
-      @expired_no_refresh = OauthWrap.
-          as_web_app(:authorization_url => Fixtures::AUTH_URL).
-          as(*Fixtures::VALID_CREDENTIALS.first).
-          with_tokens(Fixtures::EXPIRED_ACCOUNT)
     end
     
     it "issues a POST requets to the auth-server" do
@@ -34,20 +19,37 @@ module OauthWrap
     end
     
     it "raises an exception if refresh is not supported" do
+      app = OauthWrap.
+        as_web_app(:authorization_url => Fixtures::AUTH_URL).
+        as(*Fixtures::VALID_CREDENTIALS.first).
+        with_tokens(Fixtures::ACCOUNTS.first)
+        
       lambda {
-        @no_refresh.refresh
+        app.refresh
       }.should raise_error(OauthWrap::RefreshNotSupported)
     end
     
     context "when accessing a resource" do
       it "is not called if the server does not support refreshes" do
+        app = OauthWrap.
+          as_web_app(:authorization_url => Fixtures::AUTH_URL).
+          as(*Fixtures::VALID_CREDENTIALS.first).
+          with_tokens(Fixtures::EXPIRED_ACCOUNT)
+          
         lambda {
-          @expired_no_refresh.get(Fixtures::SIMPLE_RESOURCE_URL)
+          app.get(Fixtures::SIMPLE_RESOURCE_URL)
         }.should raise_error(OauthWrap::Unauthorized)
       end
       
       it "is called if access was denied due to an expired access_token" do
-        @expired.get(Fixtures::SIMPLE_RESOURCE_URL)
+        app = OauthWrap.
+          as_web_app(:authorization_url => Fixtures::AUTH_URL, :refresh_url => Fixtures::REFRESH_URL).
+          as(*Fixtures::VALID_CREDENTIALS.first).
+          with_tokens(Fixtures::EXPIRED_ACCOUNT)
+        
+        lambda {
+          app.get(Fixtures::SIMPLE_RESOURCE_URL)
+        }.should_not raise_error(OauthWrap::Unauthorized)
       end
     end
   end
