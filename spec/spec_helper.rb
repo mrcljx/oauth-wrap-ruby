@@ -1,15 +1,19 @@
+require 'rubygems'
+
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-require 'oauth_wrap'
+
+# external test-helpers
 require 'spec'
 require 'spec/autorun'
-
 require 'webmock/rspec'
 include WebMock
 
-# some patches which must be fixed in external dependencies
-require 'monkey_patches'
+# the library
+require 'oauth_wrap'
 
+# test helpers
+require 'monkey_patches'
 require 'fixtures'
 require 'fake_server'
 
