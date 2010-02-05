@@ -1,4 +1,4 @@
-class OauthWrapApp
+class OauthWrap::Rack
   
   def initialize(app)
     @app = app
