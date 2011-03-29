@@ -4,7 +4,7 @@ require 'ostruct'
 module OauthWrap
   describe WebApp, '#request' do
     before :each do
-      WebMock.reset_webmock
+      WebMock.respond_to?(:reset!) ? WebMock.reset! : WebMock.reset_webmock
       FakeOauthServer.new.start
       
       @web_app = OauthWrap.
