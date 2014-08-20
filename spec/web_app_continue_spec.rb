@@ -4,7 +4,7 @@ require 'ostruct'
 module OauthWrap
   describe WebApp, '#continue' do
     before :each do
-      WebMock.reset_webmock
+      WebMock.respond_to?(:reset!) ? WebMock.reset! : WebMock.reset_webmock
       FakeOauthServer.new.start
       @web_app = OauthWrap.as_web_app(:authorization_url => Fixtures::AUTH_URL).as(*Fixtures::VALID_CREDENTIALS.first)
       @illegal_web_app = OauthWrap.as_web_app(:authorization_url => Fixtures::AUTH_URL).as("hacker", "i-am-1337")

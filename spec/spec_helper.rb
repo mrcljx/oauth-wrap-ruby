@@ -17,7 +17,7 @@ require 'monkey_patches'
 require 'fixtures'
 require 'fake_server'
 
-disable_net_connect!
+WebMock.respond_to?(:disable_net_connect!) ? WebMock.disable_net_connect! : disable_net_connect!
 
 Spec::Runner.configure do |config|
   config.mock_with :mocha
